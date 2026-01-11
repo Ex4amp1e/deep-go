@@ -1,6 +1,7 @@
 package main
 
 import (
+	"runtime"
 	"testing"
 	"unsafe"
 
@@ -24,8 +25,11 @@ func Trace(stacks [][]uintptr) []uintptr {
 		}
 		result = append(result, uptr)
 		seen[uptr] = true
+
 		next := *(*unsafe.Pointer)(ptr)
 		dfs(next)
+
+		runtime.KeepAlive(ptr)
 	}
 
 	for _, row := range stacks {
@@ -36,7 +40,6 @@ func Trace(stacks [][]uintptr) []uintptr {
 			//nolint:govet
 			dfs(unsafe.Pointer(ptr))
 		}
-
 	}
 	return result
 }
