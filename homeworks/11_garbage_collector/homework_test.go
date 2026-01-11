@@ -1,7 +1,6 @@
 package main
 
 import (
-	"runtime"
 	"testing"
 	"unsafe"
 
@@ -14,31 +13,22 @@ func Trace(stacks [][]uintptr) []uintptr {
 	seen := map[uintptr]bool{}
 	result := []uintptr{}
 
-	var dfs func(ptr unsafe.Pointer)
-	dfs = func(ptr unsafe.Pointer) {
-		if ptr == nil {
+	var dfs func(ptr uintptr)
+	dfs = func(ptr uintptr) {
+		if ptr == 0 || seen[ptr] {
 			return
 		}
-		uptr := uintptr(ptr)
-		if seen[uptr] {
-			return
-		}
-		result = append(result, uptr)
-		seen[uptr] = true
+		seen[ptr] = true
+		result = append(result, ptr)
 
-		next := *(*unsafe.Pointer)(ptr)
-		dfs(next)
-
-		runtime.KeepAlive(ptr)
+		//nolint:govet
+		uptr := *(*uintptr)(unsafe.Pointer(ptr))
+		dfs(uptr)
 	}
 
 	for _, row := range stacks {
 		for _, ptr := range row {
-			if ptr == 0 {
-				continue
-			}
-			//nolint:govet
-			dfs(unsafe.Pointer(ptr))
+			dfs(ptr)
 		}
 	}
 	return result
