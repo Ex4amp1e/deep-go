@@ -1,8 +1,8 @@
-package main
+package homework12
 
 import "errors"
 
-var ErrNotFound = errors.New("Not found")
+var ErrNotFound = errors.New("not found")
 
 type Prioritisable interface {
 	GetIdentifier() int
