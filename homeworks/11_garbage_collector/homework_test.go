@@ -13,20 +13,27 @@ func Trace(stacks [][]uintptr) []uintptr {
 	seen := map[uintptr]bool{}
 	result := []uintptr{}
 
-	var dfs func(uintptr)
-	dfs = func(ptr uintptr) {
-		if ptr == 0 || seen[ptr] {
+	var dfs func(ptr unsafe.Pointer)
+	dfs = func(ptr unsafe.Pointer) {
+		if ptr == nil {
 			return
 		}
-		result = append(result, ptr)
-		seen[ptr] = true
-		next := *(*uintptr)(unsafe.Pointer(ptr))
+		uptr := uintptr(ptr)
+		if seen[uptr] {
+			return
+		}
+		result = append(result, uptr)
+		seen[uptr] = true
+		next := *(*unsafe.Pointer)(ptr)
 		dfs(next)
 	}
 
 	for _, row := range stacks {
 		for _, ptr := range row {
-			dfs(ptr)
+			if ptr == 0 {
+				continue
+			}
+			dfs(unsafe.Pointer(ptr))
 		}
 
 	}
