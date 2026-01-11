@@ -40,11 +40,14 @@ var heapObjects = []int{
 	0x00, 0x00, 0x00, 0x00, 0x00,
 }
 
+var (
+	heapPointer1 = &heapObjects[1]
+	heapPointer2 = &heapObjects[2]
+	heapPointer3 = (*int)(nil)
+	heapPointer4 = &heapPointer3
+)
+
 func TestTrace(t *testing.T) {
-	heapPointer1 := &heapObjects[1]
-	heapPointer2 := &heapObjects[2]
-	heapPointer3 := (*int)(nil)
-	heapPointer4 := &heapPointer3
 
 	var stacks = [][]uintptr{
 		{
