@@ -33,6 +33,7 @@ func Trace(stacks [][]uintptr) []uintptr {
 			if ptr == 0 {
 				continue
 			}
+			//nolint:govet
 			dfs(unsafe.Pointer(ptr))
 		}
 
@@ -45,10 +46,10 @@ func TestTrace(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00,
 	}
 
-	var heapPointer1 *int = &heapObjects[1]
-	var heapPointer2 *int = &heapObjects[2]
-	var heapPointer3 *int = nil
-	var heapPointer4 **int = &heapPointer3
+	heapPointer1 := &heapObjects[1]
+	heapPointer2 := &heapObjects[2]
+	heapPointer3 := (*int)(nil)
+	heapPointer4 := &heapPointer3
 
 	var stacks = [][]uintptr{
 		{
