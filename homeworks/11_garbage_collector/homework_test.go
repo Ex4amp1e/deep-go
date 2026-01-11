@@ -32,13 +32,15 @@ func Trace(stacks [][]uintptr) []uintptr {
 		}
 	}
 	return result
+
+}
+
+// For test purpose we want to allocate this globally
+var heapObjects = []int{
+	0x00, 0x00, 0x00, 0x00, 0x00,
 }
 
 func TestTrace(t *testing.T) {
-	var heapObjects = []int{
-		0x00, 0x00, 0x00, 0x00, 0x00,
-	}
-
 	heapPointer1 := &heapObjects[1]
 	heapPointer2 := &heapObjects[2]
 	heapPointer3 := (*int)(nil)
