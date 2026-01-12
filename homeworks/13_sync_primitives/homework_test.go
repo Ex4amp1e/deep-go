@@ -100,3 +100,39 @@ func TestRWMutexWithWriterPriority(t *testing.T) {
 	assert.True(t, mutualExlusionWithWriter.Load())
 	assert.Equal(t, int32(1), readersCount.Load())
 }
+
+func TestTryLockFailsWhenWriterActive(t *testing.T) {
+	mutex := NewRWMutex()
+	mutex.Lock() // writer
+
+	ok := mutex.TryLock()
+	assert.False(t, ok)
+}
+
+func TestTryLockFailsWhenReadersActive(t *testing.T) {
+	mutex := NewRWMutex()
+	mutex.RLock() // reader
+
+	ok := mutex.TryLock()
+	assert.False(t, ok)
+}
+
+func TestTryLockSucceedsWhenFree(t *testing.T) {
+	mutex := NewRWMutex()
+
+	ok := mutex.TryLock()
+	assert.True(t, ok)
+
+	var entered atomic.Bool
+	entered.Store(false)
+
+	go func() {
+		mutex.Lock()
+		entered.Store(true)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+	assert.False(t, entered.Load())
+
+	mutex.Unlock()
+}
