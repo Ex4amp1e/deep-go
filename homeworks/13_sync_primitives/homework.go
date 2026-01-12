@@ -22,7 +22,12 @@ func (m *RWMutex) Lock() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.underLock()
+	m.writersWaiting++
+	for m.writerActive || m.readerCount != 0 {
+		m.writerCond.Wait()
+	}
+	m.writerActive = true
+	m.writersWaiting--
 }
 
 func (m *RWMutex) Unlock() {
@@ -36,7 +41,10 @@ func (m *RWMutex) RLock() {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.underRLock()
+	for m.writerActive || m.writersWaiting > 0 {
+		m.writerCond.Wait()
+	}
+	m.readerCount++
 }
 
 func (m *RWMutex) RUnlock() {
@@ -49,41 +57,25 @@ func (m *RWMutex) RUnlock() {
 }
 
 func (m *RWMutex) TryLock() bool {
-	ok := m.mutex.TryLock()
-	if !ok {
-		return false
-	}
+	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.underLock()
+	if m.writerActive || m.readerCount > 0 {
+		return false
+	}
 
+	m.writerActive = true
 	return true
 }
 
 func (m *RWMutex) TryRLock() bool {
-	ok := m.mutex.TryLock()
-	if !ok {
-		return false
-	}
+	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	m.underRLock()
-
-	return true
-}
-
-func (m *RWMutex) underLock() {
-	m.writersWaiting++
-	for m.writerActive || m.readerCount != 0 {
-		m.writerCond.Wait()
+	if m.writerActive || m.writersWaiting > 0 {
+		return false
 	}
-	m.writerActive = true
-	m.writersWaiting--
-}
 
-func (m *RWMutex) underRLock() {
-	for m.writerActive || m.writersWaiting > 0 {
-		m.writerCond.Wait()
-	}
 	m.readerCount++
+	return true
 }
